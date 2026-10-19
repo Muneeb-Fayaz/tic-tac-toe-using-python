@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe | Play a quick match</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg: #0b1020;
+            --panel: rgba(21, 29, 52, 0.88);
+            --text: #f5f7ff;
+            --muted: #a7b0cc;
+            --purple: #9b8cff;
+            --cyan: #69e2df;
+            --line: rgba(255,255,255,0.10);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at 15% 15%, rgba(105,226,223,.14), transparent 28%),
+                radial-gradient(circle at 85% 85%, rgba(155,140,255,.18), transparent 30%),
+                var(--bg);
+        }
+
+        .page { width: 100%; max-width: 560px; }
+
+        .topline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            margin-right: 7px;
+            border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 12px var(--cyan);
+        }
+
+        .game-card {
+            padding: 30px;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            background: var(--panel);
+            box-shadow: 0 24px 80px rgba(0,0,0,.35);
+            backdrop-filter: blur(14px);
+        }
+
+        .heading { text-align: center; }
+        .eyebrow {
+            color: var(--cyan);
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 10px 0 8px;
+            font-size: clamp(34px, 8vw, 48px);
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .scoreboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 26px 0 18px;
+        }
+
+        .score {
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: rgba(255,255,255,.035);
+            text-align: center;
+        }
+
+        .score span { display: block; color: var(--muted); font-size: 12px; }
+        .score strong { display: block; margin-top: 5px; font-size: 25px; }
+        .score:first-child strong { color: var(--cyan); }
+        .score:last-child strong { color: var(--purple); }
+
+        .turn {
+            margin: 0 0 15px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 22px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: rgba(255,255,255,.045);
+            color: var(--text);
+            font-size: clamp(38px, 10vw, 58px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform .15s ease, background .15s ease, border-color .15s ease;
+        }
+
+        .cell:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: rgba(155,140,255,.12);
+            border-color: rgba(155,140,255,.65);
+        }
+
+        .cell:disabled { cursor: default; }
+        .cell.x { color: var(--cyan); }
+        .cell.o { color: var(--purple); }
+        .cell.winner {
+            background: rgba(105,226,223,.13);
+            border-color: var(--cyan);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        button.action {
+            flex: 1;
+            padding: 13px 16px;
+            border: 0;
+            border-radius: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform .15s ease, opacity .15s ease;
+        }
+
+        button.action:hover { transform: translateY(-1px); }
+        .primary { background: linear-gradient(135deg, var(--purple), #7567e8); color: white; }
+        .secondary { background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--line) !important; }
+
+        .hint {
+            margin: 18px 0 0;
+            color: var(--muted);
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        footer {
+            margin-top: 18px;
+            text-align: center;
+            color: #77809d;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 14px; }
+            .game-card { padding: 20px; border-radius: 22px; }
+            .board { gap: 7px; }
+            .cell { border-radius: 13px; }
+            .actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <div class="topline">
+            <span><span class="status-dot"></span>Game room</span>
+            <span>2 players · 1 board</span>
+        </div>
+
+        <section class="game-card">
+            <header class="heading">
+                <div class="eyebrow">Quick match</div>
+                <h1>Tic-Tac-Toe</h1>
+                <p class="subtitle">A little strategy. A little luck.<br>Who gets three in a row?</p>
+            </header>
+
+            <div class="scoreboard">
+                <div class="score">
+                    <span>PLAYER ONE</span>
+                    <strong>X</strong>
+                </div>
+                <div class="score">
+                    <span>PLAYER TWO</span>
+                    <strong>O</strong>
+                </div>
+            </div>
+
+            <p class="turn" id="message" aria-live="polite">Player X, you're up!</p>
+
+            <div class="board" id="board" aria-label="Tic-Tac-Toe board">
+                <button class="cell" data-position="0" aria-label="Square 1"></button>
+                <button class="cell" data-position="1" aria-label="Square 2"></button>
+                <button class="cell" data-position="2" aria-label="Square 3"></button>
+                <button class="cell" data-position="3" aria-label="Square 4"></button>
+                <button class="cell" data-position="4" aria-label="Square 5"></button>
+                <button class="cell" data-position="5" aria-label="Square 6"></button>
+                <button class="cell" data-position="6" aria-label="Square 7"></button>
+                <button class="cell" data-position="7" aria-label="Square 8"></button>
+                <button class="cell" data-position="8" aria-label="Square 9"></button>
+            </div>
+
+            <div class="actions">
+                <button class="action primary" id="restart">New round</button>
+                <button class="action secondary" id="resetScore">Reset scores</button>
+            </div>
+            <p class="hint">Take turns with a friend on the same screen. First to connect three marks wins.</p>
+        </section>
+
+        <footer>Made with Python, Flask, HTML &amp; CSS</footer>
+    </main>
+
+    <script>
+        const cells = document.querySelectorAll(".cell");
+        const message = document.getElementById("message");
+        const restartButton = document.getElementById("restart");
+        const resetScoreButton = document.getElementById("resetScore");
+
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let gameOver = false;
+        let scores = { X: 0, O: 0 };
+
+        // These combinations are only used to highlight the winning row.
+        const winningLines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        function findWinningLine() {
+            return winningLines.find(([a, b, c]) =>
+                board[a] && board[a] === board[b] && board[b] === board[c]
+            );
+        }
+
+        function showBoard() {
+            cells.forEach((cell, index) => {
+                cell.textContent = board[index];
+                cell.classList.toggle("x", board[index] === "X");
+                cell.classList.toggle("o", board[index] === "O");
+                cell.disabled = gameOver || board[index] !== "";
+                cell.classList.remove("winner");
+            });
+
+            const line = findWinningLine();
+            if (line) {
+                line.forEach(index => cells[index].classList.add("winner"));
+            }
+        }
+
+        function finishRound(winner) {
+            gameOver = true;
+
+            if (winner) {
+                scores[winner] += 1;
+                message.textContent = `Player ${winner} wins! Nice one!`;
+            } else {
+                message.textContent = "It's a draw! Try another round.";
+            }
+
+            showBoard();
+        }
+
+        async function playTurn(position) {
+            if (gameOver || board[position] !== "") return;
+
+            // Ask Python to check and make the move.
+            try {
+                const response = await fetch("/move", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        board: board,
+                        position: position,
+                        player: currentPlayer
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    message.textContent = result.error || "That move did not work.";
+                    return;
+                }
+
+                board = result.board;
+
+                if (result.winner) {
+                    finishRound(result.winner);
+                    return;
+                }
+
+                if (result.draw) {
+                    finishRound(null);
+                    return;
+                }
+
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                message.textContent = `Player ${currentPlayer}, you're up!`;
+                showBoard();
+            } catch (error) {
+                message.textContent = "Could not reach the game server. Is Flask running?";
+            }
+        }
+
+        function startNewRound() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            gameOver = false;
+            message.textContent = "Player X, you're up!";
+            showBoard();
+        }
+
+        cells.forEach(cell => {
+            cell.addEventListener("click", () => {
+                playTurn(Number(cell.dataset.position));
+            });
+        });
+
+        restartButton.addEventListener("click", startNewRound);
+
+        resetScoreButton.addEventListener("click", () => {
+            scores = { X: 0, O: 0 };
+            startNewRound();
+        });
+
+        showBoard();
+    </script>
+</body>
+</html>
